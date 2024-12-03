@@ -1,0 +1,17 @@
+{
+	"manifest_version": 3,
+	"name": "Bookmark Tooltips",
+	"version": "1.0",
+	"description": "Shows bookmark title as a tooltip when mousing over a bookmarked link.",
+	"permissions": ["bookmarks", "activeTab"],
+	"host_permissions": ["<all_urls>"],
+	"content_scripts": [
+		{
+			"matches": ["<all_urls>"],
+			"js": ["tooltip.js"]
+		}
+	],
+	"background": {
+		"scripts": ["background.js"]
+	}
+}
