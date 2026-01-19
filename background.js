@@ -4,7 +4,7 @@ let cachedBookmarks = [];
 const normalizeUrl = (url) => {
 	try {
 		const urlObj = new URL(url);
-		urlObj.hash = ""; // Remove fragments
+		urlObj.search = ""; // Remove parameters, keep anchors
 		return urlObj.href.replace(/\/$/, ""); // Remove trailing slash
 	} catch (error) {
 		console.error("Invalid URL for normalization:", url, error);
