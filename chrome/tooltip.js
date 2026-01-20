@@ -17,6 +17,8 @@ const normalizeUrl = (url) => {
 };
 let tooltip;
 let isTooltipVisible = false; // Tracks if the tooltip is currently displayed
+let bookmarkCheckTimer = null;
+let lastHoveredUrl = "";
 
 //document.addEventListener("mouseover", (event) => {
 //	console.log("Mouse over detected on element:", event.target);
@@ -71,42 +73,44 @@ document.addEventListener("mousemove", (event) => {
 	}
 });
 
-// Event listener for mouseover to show the tooltip
-document.addEventListener("mouseover", async (event) => {
-	let link = event.target;
+// Event listener for mouseover to show the tooltip (debounced)
+document.addEventListener("mouseover", (event) => {
+  let link = event.target;
 
-	// Traverse up the DOM tree to find the closest <a> tag
-	while (link && link.tagName !== "A") {
-		link = link.parentElement;
-	}
+  // Traverse up the DOM tree to find the closest <a> tag
+  while (link && link.tagName !== "A") {
+    link = link.parentElement;
+  }
 
-	if (link) {
-		//console.log("Mouse over link:", link.href);
-
-		// Check if the link is bookmarked
-		const bookmarkTitle = await checkBookmarks(link.href);
-		if (bookmarkTitle) {
-			//console.log("Bookmark title found:", bookmarkTitle);
-
-			// Show the tooltip and start tracking
-			isTooltipVisible = true;
-			showTooltip(bookmarkTitle);
-		} else {
-			//console.log("No bookmark found for URL:", link.href);
-		}
-	}
+  if (link) {
+    lastHoveredUrl = link.href;
+    if (bookmarkCheckTimer) clearTimeout(bookmarkCheckTimer);
+    bookmarkCheckTimer = setTimeout(async () => {
+      const bookmarkTitle = await checkBookmarks(lastHoveredUrl);
+      if (bookmarkTitle) {
+        //console.log("Bookmark title found:", bookmarkTitle);
+        isTooltipVisible = true;
+        showTooltip(bookmarkTitle);
+      }
+    }, 60);
+  }
 }, true);
 
 // Event listener for mouseout to hide the tooltip
 document.addEventListener("mouseout", (event) => {
-	const relatedTarget = event.relatedTarget;
+  const relatedTarget = event.relatedTarget;
 
-	// Ensure the tooltip is only hidden if the pointer leaves the link
-	if (!relatedTarget || !event.target.closest("a")) {
-		//console.log("Pointer left the link, hiding tooltip.");
-		isTooltipVisible = false; // Stop tracking
-		hideTooltip();
-	}
+  // Ensure the tooltip is only hidden if the pointer leaves the link
+  if (!relatedTarget || !event.target.closest("a")) {
+    //console.log("Pointer left the link, hiding tooltip.");
+    isTooltipVisible = false; // Stop tracking
+    hideTooltip();
+  }
+  // Clear pending bookmark check on mouseout
+  if (bookmarkCheckTimer) {
+    clearTimeout(bookmarkCheckTimer);
+    bookmarkCheckTimer = null;
+  }
 }, true);
 
 // Initialize the tooltip
