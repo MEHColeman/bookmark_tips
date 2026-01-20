@@ -1,4 +1,4 @@
-let cachedBookmarks = [];
+let bookmarkMap = {};
 
 // Function to normalize URLs
 const normalizeUrl = (url) => {
@@ -30,11 +30,16 @@ const flattenBookmarks = (nodes) => {
 const cacheBookmarks = () => {
   try {
     chrome.bookmarks.getTree((allBookmarks) => {
-      cachedBookmarks = flattenBookmarks(allBookmarks).map((bookmark) => ({
-        title: bookmark.title,
-        url: normalizeUrl(bookmark.url), // Normalize URLs during caching
-      }));
-      console.log("Cached bookmarks (normalized):", cachedBookmarks);
+      const flat = flattenBookmarks(allBookmarks);
+      const map = {};
+      flat.forEach((bookmark) => {
+        if (bookmark.url) {
+          const url = normalizeUrl(bookmark.url);
+          map[url] = bookmark.title;
+        }
+      });
+      bookmarkMap = map;
+      console.log("Cached bookmarks (normalized):", Object.keys(bookmarkMap).length);
     });
   } catch (error) {
     console.error("Error caching bookmarks:", error);
@@ -57,15 +62,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     console.log("Normalized URL for search:", normalizedUrl);
 
     // Debugging: Log cached bookmarks and compare URLs
-    console.log("Cached bookmarks for comparison:", cachedBookmarks);
-    const match = cachedBookmarks.find((bookmark) => {
-      console.log(
-        `Comparing bookmark URL: ${bookmark.url} with normalized URL: ${normalizedUrl}`
-      );
-      return bookmark.url === normalizedUrl;
-    });
-
-    const title = match ? match.title : null;
+    console.log("Cached bookmarks for comparison:", bookmarkMap);
+    const title = bookmarkMap[normalizedUrl] || null;
     console.log("Resolved bookmark title:", title);
     sendResponse({ success: true, title });
     return true;
