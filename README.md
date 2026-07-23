@@ -92,3 +92,11 @@ License
 
 Changelog
 - v1.0 - Initial release
+
+## Install
+
+No build step. Load as a temporary add-on in Firefox: open `about:debugging` → "This Firefox" → "Load Temporary Add-on…" → select `manifest.json` in this directory. A Chrome-oriented copy of the extension files lives in `chrome/`.
+
+## Run
+
+The extension runs automatically once loaded: browse to any page and hover over a link you have bookmarked — the bookmark title appears as a tooltip.
